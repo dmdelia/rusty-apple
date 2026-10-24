@@ -1,0 +1,50 @@
+name: RustyApple CI
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15-intel, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Formatting
+        run: cargo fmt --all
+      - name: Lint
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --all-targets
+      - name: Release build
+        run: cargo build --release
+      - name: Generate and inspect Windows fixture
+        run: |
+          cargo run --release -- fixture demo.exe
+          cargo run --release -- inspect demo.exe
+      - name: Execute machine code on AMD64 runners
+        if: runner.arch == 'X64'
+        run: cargo run --release -- run demo.exe
+      - name: Package and execute Intel macOS app
+        if: matrix.os == 'macos-15-intel'
+        run: |
+          mkdir -p dist
+          cp demo.exe dist/demo.exe
+          cargo run --release -- bundle dist/demo.exe dist
+          test -f "dist/RustyApple Demo.app/Contents/Info.plist"
+          test -x "dist/RustyApple Demo.app/Contents/MacOS/RustyAppleDemo"
+          test -f "dist/RustyApple Demo.app/Contents/Resources/guest.exe"
+          "dist/RustyApple Demo.app/Contents/MacOS/RustyAppleDemo"
+      - name: Upload unsigned demo
+        if: matrix.os == 'macos-15-intel'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rustyapple-unsigned-intel-macos-demo
+          path: dist/RustyApple Demo.app
