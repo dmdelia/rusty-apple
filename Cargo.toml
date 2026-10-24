@@ -1,0 +1,20 @@
+[package]
+name = "rustyapple"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Experimental independent Windows PE compatibility research for macOS"
+publish = false
+
+[lib]
+name = "rustyapple"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustyapple"
+path = "src/main.rs"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

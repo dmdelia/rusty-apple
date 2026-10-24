@@ -1,0 +1,6 @@
+/target/
+/dist/
+*.exe
+*.dmg
+*.app/
+.DS_Store
