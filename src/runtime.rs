@@ -73,10 +73,10 @@ mod unix_x64 {
         }
 
         fn set_protection(&self, start: usize, len: usize, prot: c_int) -> Result<(), String> {
-            if start.checked_add(len).map_or(true, |end| end > self.len) {
+            if start.checked_add(len).is_none_or(|end| end > self.len) {
                 return Err("invalid mprotect range".into());
             }
-            if unsafe { mprotect(unsafe { self.addr.add(start) }.cast(), len, prot) } != 0 {
+            if unsafe { mprotect(self.addr.add(start).cast(), len, prot) } != 0 {
                 return Err(format!("mprotect failed: {}", std::io::Error::last_os_error()));
             }
             Ok(())
@@ -109,7 +109,7 @@ mod unix_x64 {
             }
             let page_rva = u32::from_le_bytes(table[cursor..cursor+4].try_into().unwrap());
             let block_size = u32::from_le_bytes(table[cursor+4..cursor+8].try_into().unwrap()) as usize;
-            if block_size < 8 || block_size % 2 != 0 || block_size > table.len() - cursor {
+            if block_size < 8 || !block_size.is_multiple_of(2) || block_size > table.len() - cursor {
                 return Err("invalid base relocation block size".into());
             }
             let mut ent = cursor + 8;
