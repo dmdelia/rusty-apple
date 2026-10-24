@@ -118,7 +118,7 @@ impl<'a> PeImage<'a> {
             let end = section.virtual_address.checked_add(section.span())
                 .ok_or("section virtual address overflow")?;
             if section.span() == 0 || section.virtual_address < size_of_headers ||
-                section.virtual_address % section_alignment != 0 || end > size_of_image {
+                !section.virtual_address.is_multiple_of(section_alignment) || end > size_of_image {
                 return Err(format!("invalid mapping for section {}", section.name));
             }
             if section.raw_size > 0 {
