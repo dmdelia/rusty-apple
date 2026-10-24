@@ -90,7 +90,7 @@ impl<'a> PeImage<'a> {
             size_of_headers as usize > bytes.len() {
             return Err("invalid or oversized PE image layout".into());
         }
-        if section_alignment < 4096 || section_alignment % 4096 != 0 {
+        if section_alignment < 4096 || !section_alignment.is_multiple_of(4096) {
             return Err("only page-aligned PE32+ sections are currently supported".into());
         }
         if u32_at(optional, 108)? < 16 {
